@@ -14,6 +14,7 @@ lock = Lock()
 events_file = 'events.evt'
 
 class EventManager(BaseManager): pass
+class PlayerManager(BaseManager): pass
 
 def get_event_manager():
     event_manager = EventManager(('', 50001), b'password')
@@ -26,6 +27,13 @@ def get_event_manager():
     event_manager.connect()
 
     return event_manager
+
+def get_player_manager():
+    player_manager = PlayerManager(('', 50002), b'password')
+    player_manager.register('command')
+    player_manager.connect()
+
+    return player_manager
     
 @app.route('/poll')
 def poll():
@@ -97,7 +105,8 @@ def get():
 def handle_message(sender_psid, message):
     response = {}
     if 'text' in message:
-        response = { 'text' : 'You sent the message: %s.' % message['text'] }
+        success, d = get_player_manager().command(message['text'])._getvalue()
+        response = { 'text' : d['message'] }
 
     call_send_api(sender_psid, response)
 
