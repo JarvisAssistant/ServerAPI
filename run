@@ -1,0 +1,2 @@
+sudo python3/bin/python ytplayer_event_manager.py &
+sudo python3/bin/python server.py
