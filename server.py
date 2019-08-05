@@ -3,7 +3,6 @@ from flask import Flask, request, render_template, current_app, jsonify
 from threading import Lock
 import json, time, os, os.path
 from multiprocessing.managers import BaseManager
-import os
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -104,9 +103,9 @@ def get():
 
 def handle_message(sender_psid, message):
     response = {}
-    if 'text' in message:
-        success, d = get_player_manager().command(message['text'])._getvalue()
-        response = { 'text' : d['message'] }
+
+    success, d = get_player_manager().command(message)._getvalue()
+    response = { 'text' : d['message'] }
 
     call_send_api(sender_psid, response)
 
