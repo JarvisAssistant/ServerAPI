@@ -10,66 +10,15 @@ app.config.from_object(__name__)
 PAGE_ACCESS_TOKEN = os.environ['PAGE_ACCESS_TOKEN']
 
 lock = Lock()
-events_file = 'events.evt'
 
-class EventManager(BaseManager): pass
 class PlayerManager(BaseManager): pass
 
-def get_event_manager():
-    event_manager = EventManager(('', 50001), b'password')
-    event_manager.register('add_waiting_client')
-    event_manager.register('add_event')
-    event_manager.register('get_events')
-    event_manager.register('has_events')
-    event_manager.register('update_state')
-    event_manager.register('get_state')
-    event_manager.connect()
-
-    return event_manager
-
 def get_player_manager():
-    player_manager = PlayerManager(('', 50002), b'password')
+    player_manager = PlayerManager(('', 50002), b'password123')
     player_manager.register('command')
     player_manager.connect()
 
     return player_manager
-    
-@app.route('/poll')
-def poll():
-    evt_mgr = get_event_manager()
-
-    user_id = evt_mgr.add_waiting_client()._getvalue()
-
-    while not evt_mgr.has_events(user_id)._getvalue():
-        time.sleep(0.5)
-
-    event = { "type" : "NONE" }
-    with lock:
-        event = evt_mgr.get_events(user_id)._getvalue()[0]
-    
-    return event
-
-@app.route('/event', methods=['PUT'])
-def event():
-    evt_mgr = get_event_manager()
-    d = request.get_json()
-    with lock:
-        evt_mgr.add_event(d)
-
-    return ''
-
-@app.route('/update_ytplayer_state', methods=['POST'])
-def update_yt_player_state():
-    get_event_manager().update_state(request.get_json())
-    return '', 200
-
-@app.route('/ytplayer_state', methods=['GET'])
-def get_ytplayer_state():
-    return jsonify(get_event_manager().get_state()._getvalue()), 200
-
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 @app.route('/webhook', methods=['POST'])
 def subscribe():
@@ -102,12 +51,15 @@ def get():
             return ('', 403, [])
 
 def handle_message(sender_psid, message):
+    print('handle_message')
     response = {}
 
     success, d = get_player_manager().command(message)._getvalue()
+    print('commanded')
     response = { 'text' : d['message'] }
 
     call_send_api(sender_psid, response)
+    print('send api')
 
 def call_send_api(sender_psid, response):
     request_body = {
