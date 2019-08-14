@@ -51,15 +51,10 @@ def get():
             return ('', 403, [])
 
 def handle_message(sender_psid, message):
-    print('handle_message')
-    response = {}
-
-    success, d = get_player_manager().command(message)._getvalue()
-    print('commanded')
-    response = { 'text' : d['message'] }
+    message = get_player_manager().command(message)._getvalue()
+    response = { 'text' : message }
 
     call_send_api(sender_psid, response)
-    print('send api')
 
 def call_send_api(sender_psid, response):
     request_body = {
